@@ -27,8 +27,8 @@ def create_room(game_map, room):
 
 def create_h_tunnel(game_map, x1, x2, y):
     for x in range(min(x1, x2), max(x1, x2) + 1):
-        game_map.walkable[x, y] = True
-        game_map.transparent[x,y] = True
+            game_map.walkable[x, y] = True
+            game_map.transparent[x,y] = True
 
 def create_v_tunnel(game_map, y1, y2, x):
     for y in range(min(y1, y2), max(y1, y2) + 1):
@@ -51,8 +51,14 @@ def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_h
         new_room = Rect(x, y, w, h)
 
         for other_room in rooms:
+            overlap = 0
             if new_room.intersect(other_room):
-                break
+                # this makes the map more roomy. return to "break" to make a classic nethack-style map
+                if overlap == 1:
+                    break
+                else:
+                    continue
+                    overlap += 1
 
         else:
             # this would be the valid rooms
@@ -67,14 +73,19 @@ def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_h
                 (prev_x, prev_y) = rooms[num_rooms - 1].center()
 
                 # flip a coin (random number that is either 0 or 1)
+                # the y & x + 1's make the tunnels wider.
                 if randint(0, 1) == 1:
                     # first move horizontally, then vertically
                     create_h_tunnel(game_map, prev_x, new_x, prev_y)
+                    create_h_tunnel(game_map, prev_x, new_x, prev_y+1)
                     create_v_tunnel(game_map, prev_y, new_y, new_x)
+                    create_v_tunnel(game_map, prev_y, new_y, new_x+1)
                 else:
                     # first move vertically, then horizontally
                     create_v_tunnel(game_map, prev_y, new_y, prev_x)
+                    create_v_tunnel(game_map, prev_y, new_y, prev_x+1)
                     create_h_tunnel(game_map, prev_x, new_x, new_y)
+                    create_h_tunnel(game_map, prev_x, new_x, new_y+1)
 
 
             rooms.append(new_room)

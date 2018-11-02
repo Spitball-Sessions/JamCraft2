@@ -11,8 +11,8 @@ def main():
     map_width = 65
     map_height = 50
 
-    room_max_size = 10
-    room_min_size = 6
+    room_max_size = 15
+    room_min_size = 8
     max_rooms = 30
 
     colors = {
