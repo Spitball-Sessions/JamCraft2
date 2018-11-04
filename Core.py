@@ -2,7 +2,7 @@ import tdl
 from render_func import clear_all, render_all
 from map_utils import make_map, GameMap
 from handlers import handle_keys
-from entities import Entity
+from entities import Entity, get_blocking_entities
 
 def main():
     screen_width = 80
@@ -15,21 +15,24 @@ def main():
     room_min_size = 8
     max_rooms = 30
 
-    fov_algorithm = "BASIC"
+    fov_algorithm = "SHADOW"
     fov_light_walls = True
     fov_radius = 6
+    fov_radius_2 = 8
+
+    max_monsters_per_room = 3
 
     colors = {
         "d_wall": 0x666666,
         "d_ground": 0x1C1C1C,
         "l_wall": 0xA7A26E,
         "l_ground": 0xFBF084,
-
+        "l_ground_2": 0xD05200,
+        "enemies": 0xAD0303
     }
 
-    player = Entity(int(screen_width  /2), int(screen_height /2), '@', 0x0DE6F0)
-    npc = Entity(int(screen_width / 2 - 5), int(screen_height / 2), "@", 0xFFFFFF)
-    entities = [npc, player]
+    player = Entity(0, 0, "2", 0x00D0C0, "Player", blocks=True)
+    entities = [player]
 
 
     tdl.set_font('terminal16x16_gs_ro.png', greyscale=True, altLayout=False)
@@ -38,13 +41,14 @@ def main():
     con = tdl.Console(screen_width,screen_height)
 
     game_map = GameMap(map_width, map_height)
-    make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_height, player)
+    make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities, max_monsters_per_room, colors)
 
     fov_recompute = True
 
     while not tdl.event.is_window_closed():
         if fov_recompute:
             game_map.compute_fov(player.x, player.y, fov=fov_algorithm, radius=fov_radius, light_walls=fov_light_walls)
+            game_map.compute_fov(player.x, player.y, fov=fov_algorithm, radius=fov_radius_2, light_walls=fov_light_walls)
         render_all(con, entities, game_map, fov_recompute, root_console, screen_width, screen_height, colors)
         tdl.flush()
 
@@ -71,8 +75,15 @@ def main():
 
         if move:
             dx, dy = move
-            if game_map.walkable[player.x + dx, player.y + dy]:
-               player.move(dx,dy)
+            destination_x = player.x + dx
+            destination_y = player.y + dy
+            if game_map.walkable[destination_x, destination_y]:
+                target = get_blocking_entities(entities, destination_x, destination_y)
+
+                if target:
+                    print("You kick the " + target.name + " in the shins, much to its annoyance!")
+                else:
+                   player.move(dx,dy)
 
             fov_recompute = True
 

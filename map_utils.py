@@ -1,5 +1,11 @@
-from random import randint
+from random import randint, choice
+from tdl.map import Map
+from entities import Entity
 
+class GameMap(Map):
+    def __init__(self, width, height):
+        super().__init__(width, height)
+        self.explored = [[False for y in range(height)] for x in range(width)]
 
 class Rect:
     def __init__(self, x, y, w, h):
@@ -35,8 +41,40 @@ def create_v_tunnel(game_map, y1, y2, x):
         game_map.walkable[x, y] = True
         game_map.transparent[x,y] = True
 
+def place_entities(room, entities, max_monsters_per_room, colors):
+    number_of_monsters = randint(0, max_monsters_per_room)
 
-def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_height, player):
+    for i in range(number_of_monsters):
+        x = randint(room.x1 + 1, room.x2 - 1)
+        y = randint(room.y1 + 1, room.y2 - 1)
+
+        if not any([entity for entity in entities if entity.x == x and entity.y == y]):
+            num = (0,1,1,1,1,1,1,1,1,1,1,2,2,2,3,3,3,3,4,4,4,4,5,5,5,6,6,7,7,8,8,8,9,9)
+            j = choice(num)
+            if j == 1:
+                monster = Entity(x, y, "1", colors.get("enemies"), "worm", blocks=True)
+            elif j == 2:
+                monster = Entity(x, y, "2", colors.get("enemies"), "cobra", blocks=True)
+            elif j == 3:
+                monster = Entity(x, y, "3", colors.get("enemies"), 'cat', blocks=True)
+            elif j == 4:
+                monster = Entity(x, y, "4", colors.get("enemies"), 'wolf', blocks=True)
+            elif j == 5:
+                monster = Entity(x, y, "5", colors.get("enemies"), 'evil hand', blocks=True)
+            elif j == 6:
+                monster = Entity(x, y, "6", colors.get("enemies"), "ant", blocks=True)
+            elif j == 7:
+                monster = Entity(x, y, "7", colors.get("enemies"), 'hydra', blocks=True)
+            elif j == 8:
+                monster = Entity(x, y, "8", colors.get("enemies"), 'spider', blocks=True)
+            elif j == 9:
+                monster = Entity(x, y, "9", colors.get("enemies"), 'tailed beast', blocks=True)
+            elif j == 0:
+                monster = Entity(x, y, "0", colors.get("enemies"), 'min0taur', blocks=True)
+            entities.append(monster)
+
+
+def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_height, player, entities, max_monsters_per_room, colors):
     rooms = []
     num_rooms = 0
 
@@ -87,6 +125,7 @@ def make_map(game_map, max_rooms, room_min_size, room_max_size, map_width, map_h
                     create_h_tunnel(game_map, prev_x, new_x, new_y)
                     create_h_tunnel(game_map, prev_x, new_x, new_y+1)
 
+            place_entities(new_room, entities, max_monsters_per_room, colors)
 
             rooms.append(new_room)
             num_rooms += 1
